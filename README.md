@@ -32,6 +32,7 @@ AppSheetで作成された既存の業務アプリをもとに、工事完了報
 - [プロダクト企画](docs/02-product-plan.md)
 - [技術方式の選択肢](docs/03-architecture-options.md)
 - [実装ロードマップ](docs/04-implementation-roadmap.md)
+- [進行ルールと専門家チーム](docs/06-operating-model.md)
 - [用語集](docs/glossary.md)
 
 ## 次の作業

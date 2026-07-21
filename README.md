@@ -6,7 +6,15 @@
 
 AppSheetで作成された既存の業務アプリをもとに、工事完了報告書、日報、請求、月次集計を扱う新しいアプリを作る。
 
-このプロジェクトでは、既存のGoogle Drive / Google Sheets / Google Docs / Google Slides資産を調査し、使えるものは引き継ぎながら、管理・更新・保守しやすい形に整理する。
+このプロジェクトは、既存アプリの単純な作り直しではない。既存のGoogle Drive / Google Sheets / Google Docs / Google Slides資産を調査し、使えるものは引き継ぎながら、AppSheetの制約を超えたオリジナルの業務アプリへ再設計する。
+
+重視すること:
+
+- デザインを一新し、オリジナルの操作体験にする
+- 既存機能を改善する
+- AppSheetでは実現しにくい新機能を検討する
+- データ、帳票、設定、権限を整理し、管理・更新・保守しやすくする
+- GitHubで履歴管理し、判断理由を後から追えるようにする
 
 ## 現在の状態
 
@@ -33,6 +41,8 @@ AppSheetで作成された既存の業務アプリをもとに、工事完了報
 - [技術方式の選択肢](docs/03-architecture-options.md)
 - [実装ロードマップ](docs/04-implementation-roadmap.md)
 - [進行ルールと専門家チーム](docs/06-operating-model.md)
+- [Phase 1 棚卸し計画](docs/07-phase-1-inventory-plan.md)
+- [Phase 1 初回棚卸し結果](docs/08-phase-1-initial-findings.md)
 - [用語集](docs/glossary.md)
 
 ## 次の作業

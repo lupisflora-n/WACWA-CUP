@@ -21,7 +21,7 @@
 
 | シート名 | 推定用途 |
 | --- | --- |
-| `completion_reports` | 完了報告書、丸産報告、PDF生成状態 |
+| `completion_reports` | 完了報告書、特定取引先向け報告、PDF生成状態 |
 | `daily_billing_records` | 日報、作業金、残業、駐車場、高速、溶剤・立替 |
 | `monthly_summaries` | 月次請求まとめ |
 | `solvent_master` | 溶剤マスタ、単価 |
@@ -191,7 +191,7 @@
 - AppSheetテンプレート記法 `<<Start: ...>>` が使われている。
 - 月次作業金一覧の出力に使われている可能性が高い。
 
-### TRC請求書テンプレ
+### 請求書テンプレ
 
 - 種類: Google Docs
 - AppSheetテンプレート記法が使われている。

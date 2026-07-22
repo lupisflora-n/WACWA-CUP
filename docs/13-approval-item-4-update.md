@@ -1,7 +1,7 @@
 # Approval Item 4 Update
 
 Date: 2026-07-22
-Status: Waiting for file review
+Status: File review completed; waiting for field approval
 
 ## 更新対象
 
@@ -23,12 +23,18 @@ PDF/請求書の完全実装は、画面とデータの土台ができた後で�
 
 また、書式変更が発生したため、旧AppSheetの項目をそのまま移植するのではなく、新しいPDF/Excel書式から入力項目を再確認する必要があります。
 
-## 次に必要なファイル
+## 受領済みファイル
 
 - 新しい工事完了報告書のPDF
 - 新しい工事完了報告書のExcel
 - 新しい丸産報告書のPDF
 - 新しい丸産報告書のExcel
+
+4ファイルは受領し、PDFの目視確認とExcelのセル構造確認を完了した。
+
+ただし、PDF2ファイルはファイル名と内容が入れ替わっているように見えるため、ユーザー確認が必要。
+
+詳細は `docs/14-new-document-field-analysis.md` と `docs/15-form-field-approval-checklist.md` を参照する。
 
 ## ファイル確認後の完了条件
 

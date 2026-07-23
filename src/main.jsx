@@ -7,6 +7,8 @@ import {
   Sparkles, WandSparkles,
 } from 'lucide-react'
 import { templateConfig } from './config/template-config'
+import ReceiptEditorFeature from './features/ReceiptEditor'
+import ReportPreview from './features/ReportPreview'
 import './styles.css'
 
 const storageKey = 'oshigoto-prototype-records'
@@ -26,7 +28,7 @@ function App() {
   const openForm = (type, existing) => { const seed = type === 'completion' ? completionSeed : marusanSeed; setActiveForm({ ...seed, ...(existing || {}) }); setPage(`${type}-form`); setMenuOpen(false) }
   const update = (next) => { setActiveForm(next); const value = { ...drafts, [next.id]: next }; setDrafts(value); saveDrafts(value) }
   const save = () => { if (!activeForm) return; update({ ...activeForm, updatedAt: new Date().toLocaleString('ja-JP', { hour12: false }) }); setNotice('下書きを保存しました') }
-  const complete = () => { if (!activeForm) return; update({ ...activeForm, status: 'processing' }); setPage('jobs'); setNotice('PDF作成を受け付けました。サンプル環境で処理中です。') }
+  const complete = () => { if (!activeForm) return; update({ ...activeForm, status: 'ready' }); setPage('report-preview'); setNotice('帳票プレビューを作成しました。内容を確認してください。') }
   const draftCount = Object.keys(drafts).length
   const processingCount = Object.values(drafts).filter(item => item.status === 'processing').length
   return <div className="app-shell">
@@ -38,7 +40,8 @@ function App() {
       {page === 'settings' && <SettingsPage />}
       {page === 'completion-form' && activeForm && <CompletionForm data={activeForm} update={update} back={() => setPage('home')} save={save} complete={complete} receipt={() => setPage('receipt')} />}
       {page === 'marusan-form' && activeForm && <MarusanForm data={activeForm} update={update} back={() => setPage('home')} save={save} complete={complete} />}
-      {page === 'receipt' && activeForm && <ReceiptEditor data={activeForm} update={update} back={() => setPage('completion-form')} done={() => { setPage('completion-form'); setNotice('領収書を保存しました') }} />}
+      {page === 'receipt' && activeForm && <ReceiptEditorFeature data={activeForm} update={update} back={() => setPage('completion-form')} done={() => { setPage('completion-form'); setNotice('領収書を保存しました') }} />}
+      {page === 'report-preview' && activeForm && <ReportPreview data={activeForm} back={() => setPage(`${activeForm.type}-form`)} done={() => { update({ ...activeForm, status: 'completed' }); setPage('jobs'); setNotice('完了として記録しました。印刷/PDF保存も利用できます。') }} />}
     </main></div>
 }
 
@@ -50,10 +53,10 @@ function CreateCard({ tone, icon, title, text, onClick }) { return <button class
 function Stat({ icon, title, value, unit, text, onClick, quiet }) { return <button className={`stat-card ${quiet ? 'quiet' : ''}`} onClick={onClick}><div className="stat-label">{icon}{title}</div><strong>{value}{unit && <small>{unit}</small>}</strong><span>{text}</span><ArrowRight size={17} /></button> }
 
 function Drafts({ drafts, open }) { const list = Object.values(drafts); return <div className="page-wrap"><Header eyebrow="作業中の書類" title="下書き一覧" text="入力途中の書類はここから再開できます。" action={<button className="button primary" onClick={() => open('completion')}><Plus size={17} />新規作成</button>} /><div className="filter-row"><button className="filter-chip active">すべて <b>{list.length}</b></button><button className="filter-chip">完了報告書</button><button className="filter-chip">丸産報告書</button></div><div className="record-list">{list.length ? list.map(item => <RecordRow item={item} key={item.id} onClick={() => open(item.type, item)} />) : <Empty />}</div></div> }
-function RecordRow({ item, onClick }) { const marusan = item.type === 'marusan'; return <button className="record-row" onClick={onClick}><div className={`record-type ${marusan ? 'orange' : 'teal'}`}>{marusan ? <ClipboardList size={19} /> : <FileText size={19} />}</div><div className="record-main"><strong>{item.siteName || '未入力の書類'}</strong><span>{marusan ? '丸産報告書' : '工事完了報告書'} <i>·</i> {item.updatedAt || '保存済み'}</span></div><span className={`status-label ${item.status || 'draft'}`}>{item.status === 'processing' ? '作成中' : item.status === 'completed' ? '作成済み' : '下書き'}</span><ArrowRight size={18} /></button> }
+function RecordRow({ item, onClick }) { const marusan = item.type === 'marusan'; const statusLabel = item.status === 'processing' ? '作成中' : item.status === 'ready' ? '確認待ち' : item.status === 'completed' ? '作成済み' : '下書き'; return <button className="record-row" onClick={onClick}><div className={`record-type ${marusan ? 'orange' : 'teal'}`}>{marusan ? <ClipboardList size={19} /> : <FileText size={19} />}</div><div className="record-main"><strong>{item.siteName || '未入力の書類'}</strong><span>{marusan ? '丸産報告書' : '工事完了報告書'} <i>·</i> {item.updatedAt || '保存済み'}</span></div><span className={`status-label ${item.status || 'draft'}`}>{statusLabel}</span><ArrowRight size={18} /></button> }
 function Empty() { return <div className="empty-state"><Archive size={28} /><strong>下書きはありません</strong><span>新しい報告書を作成すると、ここに表示されます。</span></div> }
 
-function Jobs({ drafts, back }) { const processing = Object.values(drafts).filter(item => item.status === 'processing'); return <div className="page-wrap"><Header eyebrow="処理状況" title="PDF処理" text="帳票の作成状況を確認できます。" action={<button className="button secondary" onClick={back}><ArrowLeft size={17} />ホームへ戻る</button>} /><div className="job-summary"><div><span>現在の処理</span><strong>{processing.length ? '1件を作成中' : '処理はありません'}</strong></div><div className="job-spinner"><Cloud size={22} /></div></div><div className="record-list">{processing.length ? processing.map(item => <RecordRow item={item} key={item.id} onClick={() => {}} />) : <Empty />}</div><div className="info-callout"><Sparkles size={18} /><div><strong>サンプル環境で動作中</strong><span>本番のDriveやSheetsには接続していません。まずは画面と入力フローを確認できます。</span></div></div></div> }
+function Jobs({ drafts, back }) { const jobs = Object.values(drafts).filter(item => ['processing', 'ready', 'completed'].includes(item.status)); return <div className="page-wrap"><Header eyebrow="処理状況" title="PDF処理" text="帳票の作成状況を確認できます。" action={<button className="button secondary" onClick={back}><ArrowLeft size={17} />ホームへ戻る</button>} /><div className="job-summary"><div><span>現在の処理</span><strong>{jobs.length ? `${jobs.length}件を表示中` : '処理はありません'}</strong></div><div className="job-spinner"><Cloud size={22} /></div></div><div className="record-list">{jobs.length ? jobs.map(item => <RecordRow item={item} key={item.id} onClick={() => {}} />) : <Empty />}</div><div className="info-callout"><Sparkles size={18} /><div><strong>サンプル環境で動作中</strong><span>本番のDriveやSheetsには接続していません。まずは画面と入力フローを確認できます。</span></div></div></div> }
 
 function Field({ label, required, hint, children, className = '' }) { return <label className={`field ${className}`}><span className="field-label">{label}{required && <em>必須</em>}</span>{children}{hint && <small>{hint}</small>}</label> }
 function Input({ value, onChange, type = 'text', placeholder }) { return <input className="text-input" type={type} value={value ?? ''} placeholder={placeholder} onChange={e => onChange(e.target.value)} /> }

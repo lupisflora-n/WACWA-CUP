@@ -276,7 +276,7 @@ function App() {
       <div className="sidebar-footer"><div className="avatar">{profile.slice(0, 1) || 'K'}</div><div><strong>{profile || '未設定'}</strong><span>管理者・試作ユーザー</span></div><ChevronDown size={16} /></div>
     </aside>
     <main className="main-content">
-      <header className="topbar"><button className="icon-button mobile-menu" aria-label="メニュー" onClick={() => setMenuOpen(!menuOpen)}><Menu size={20} /></button><div className="breadcrumb">オシゴトアプリ <ChevronDown size={15} /></div><div className="topbar-actions"><span className="sync-state"><i />ローカル保存</span><button className="icon-button" aria-label="その他" onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} /></button></div></header>
+      <header className="topbar"><button className="icon-button mobile-menu" aria-label="メニュー" onClick={() => setMenuOpen(!menuOpen)}><Menu size={20} /></button><div className="breadcrumb">オシゴトアプリ <ChevronDown size={15} /></div><div className="topbar-actions"><span className="sync-state"><i />ローカル保存</span><button className="icon-button tag-shortcut" aria-label="タグ調整" title="タグ調整" onClick={() => setPage('tag-settings')}><Tags size={19} /></button><button className="icon-button" aria-label="その他" onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} /></button></div></header>
       {notice && <div className="toast" role="status"><Check size={16} />{notice}</div>}
       {page === 'home' && <Home create={openForm} go={setPage} draftCount={draftCount} processingCount={processingCount} />}
       {page === 'drafts' && <Drafts records={records} open={openForm} />}

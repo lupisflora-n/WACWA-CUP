@@ -1,5 +1,7 @@
 # Full Flow Implementation Status
 
+> Superseded by `docs/27-current-full-flow-status.md`; retained as the earlier milestone record.
+
 Updated: 2026-07-23
 
 ## Completed in the prototype
@@ -29,4 +31,3 @@ Updated: 2026-07-23
 4. Open the receipt editor, add an image, adjust grayscale/crop/rotation/zoom, and confirm it remains after returning to the form.
 5. Open the report preview and use the browser print dialog to save a PDF.
 6. Confirm the saved record appears in the history/job list.
-

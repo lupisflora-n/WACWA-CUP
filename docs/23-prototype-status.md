@@ -1,5 +1,7 @@
 # Prototype Status
 
+> Historical milestone record. The current implementation status is in `docs/27-current-full-flow-status.md`.
+
 ## Purpose
 
 This prototype is the first implementation of the approved `オシゴトアプリ` direction. It uses sample data only and does not connect to the production AppSheet app, Google Sheets, Google Drive, or the existing PDF generation scripts.

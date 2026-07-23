@@ -3,7 +3,7 @@ import {
   Archive, ArrowLeft, ArrowRight, Check, ChevronDown, ClipboardList, Cloud,
   Copy, Download, FileCheck2, FileText, LayoutDashboard, Menu, MoreHorizontal,
   Plus, Printer, ReceiptText, Save, Settings2, ShieldCheck, SlidersHorizontal,
-  Sparkles, Trash2, Upload, WandSparkles,
+  Sparkles, Tags, Trash2, Upload, WandSparkles,
 } from 'lucide-react'
 import { tagRegistry, templateConfig } from './config/template-config'
 import ReceiptEditor from './features/ReceiptEditor'
@@ -13,6 +13,7 @@ import './styles-operations.css'
 const storageKey = 'oshigoto-app-records-v2'
 const legacyStorageKey = 'oshigoto-prototype-records'
 const profileKey = 'oshigoto-app-profile'
+const tagStorageKey = 'oshigoto-app-tag-registry-v1'
 
 const completionSeed = {
   type: 'completion', status: 'draft', siteName: '', orderNo: '', workDate: '', address: '',
@@ -28,6 +29,18 @@ const marusanSeed = {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value))
+}
+
+function loadTagRegistry() {
+  try {
+    const raw = localStorage.getItem(tagStorageKey)
+    const saved = raw ? JSON.parse(raw) : null
+    if (!Array.isArray(saved)) return clone(tagRegistry)
+    const savedBySourceKey = Object.fromEntries(saved.map(item => [item.sourceKey, item]))
+    return tagRegistry.map(item => ({ ...item, tag: savedBySourceKey[item.sourceKey]?.tag || item.tag }))
+  } catch {
+    return clone(tagRegistry)
+  }
 }
 
 function normalizeRecord(record) {
@@ -106,6 +119,7 @@ function App() {
   const [errors, setErrors] = useState([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [profile, setProfile] = useState(() => localStorage.getItem(profileKey) || '富田')
+  const [tags, setTags] = useState(loadTagRegistry)
 
   useEffect(() => {
     if (!notice) return undefined
@@ -223,6 +237,30 @@ function App() {
     localStorage.setItem(profileKey, value)
   }
 
+  const updateTag = (sourceKey, value) => {
+    setTags(current => {
+      const next = current.map(item => item.sourceKey === sourceKey ? { ...item, tag: value } : item)
+      localStorage.setItem(tagStorageKey, JSON.stringify(next))
+      return next
+    })
+  }
+
+  const resetTags = () => {
+    const next = clone(tagRegistry)
+    setTags(next)
+    localStorage.setItem(tagStorageKey, JSON.stringify(next))
+    setNotice('タグを初期設定に戻しました')
+  }
+
+  const copyTag = async tag => {
+    try {
+      await navigator.clipboard.writeText(tag)
+      setNotice(`${tag} をコピーしました`)
+    } catch {
+      setNotice('タグのコピーに失敗しました')
+    }
+  }
+
   return <div className="app-shell">
     <aside className={`sidebar ${menuOpen ? 'is-open' : ''}`}>
       <div className="brand-lockup"><div className="brand-mark"><Sparkles size={18} /></div><div><strong>オシゴト</strong><span>帳票ワークスペース</span></div></div>
@@ -233,6 +271,7 @@ function App() {
         <NavButton active={page === 'jobs'} onClick={() => setPage('jobs')} icon={<Cloud size={18} />}>PDF処理</NavButton>
         <hr />
         <NavButton active={page === 'settings'} onClick={() => setPage('settings')} icon={<Settings2 size={18} />}>設定</NavButton>
+        <NavButton active={page === 'tag-settings'} onClick={() => setPage('tag-settings')} icon={<Tags size={18} />}>タグ調整</NavButton>
       </nav>
       <div className="sidebar-footer"><div className="avatar">{profile.slice(0, 1) || 'K'}</div><div><strong>{profile || '未設定'}</strong><span>管理者・試作ユーザー</span></div><ChevronDown size={16} /></div>
     </aside>
@@ -242,7 +281,8 @@ function App() {
       {page === 'home' && <Home create={openForm} go={setPage} draftCount={draftCount} processingCount={processingCount} />}
       {page === 'drafts' && <Drafts records={records} open={openForm} />}
       {page === 'jobs' && <Jobs records={records} back={() => setPage('home')} open={openJob} retry={retryJob} />}
-       {page === 'settings' && <SettingsPage records={records} profile={profile} setProfile={updateProfile} exportBackup={exportBackup} importBackup={importBackup} clearLocalData={clearLocalData} copyTag={async tag => { await navigator.clipboard?.writeText(tag); setNotice(`${tag} をコピーしました`) }} />}
+        {page === 'settings' && <SettingsPage records={records} profile={profile} setProfile={updateProfile} exportBackup={exportBackup} importBackup={importBackup} clearLocalData={clearLocalData} copyTag={copyTag} />}
+       {page === 'tag-settings' && <TagEditorPage tags={tags} updateTag={updateTag} resetTags={resetTags} copyTag={copyTag} back={() => setPage('settings')} />}
       {page === 'completion-form' && activeForm && <CompletionForm data={activeForm} update={updateRecord} back={() => setPage('home')} save={save} complete={complete} receipt={() => setPage('receipt')} errors={errors} />}
       {page === 'marusan-form' && activeForm && <MarusanForm data={activeForm} update={updateRecord} back={() => setPage('home')} save={save} complete={complete} errors={errors} />}
       {page === 'receipt' && activeForm && <ReceiptEditor data={activeForm} update={updateRecord} back={() => setPage(`${activeForm.type}-form`)} done={() => { setPage(`${activeForm.type}-form`); setNotice('領収書を保存しました') }} />}
@@ -305,6 +345,10 @@ function MarusanForm({ data, update, back, save, complete, errors }) {
   const patch = (key, value) => update({ ...data, [key]: value })
   const arrayPatch = (key, index, value) => { const next = [...data[key]]; next[index] = value; update({ ...data, [key]: next }) }
   return <FormShell eyebrow="丸産報告書" title="丸産報告書を作成" text="作業日、時間帯、作業内容、作業者を入力してください。" back={back} save={save} complete={complete} step="01 / 02 作業日報" errors={errors}><Section title="作業情報" note="会社名は固定です"><div className="fixed-company"><ShieldCheck size={17} /><span>株式会社ＴＲＣ</span><small>固定</small></div><div className="form-grid two"><Field label="工事担当名"><Input value={data.personInCharge} onChange={v => patch('personInCharge', v)} placeholder="担当者名" /></Field><Field label="現場名及び工事内容" required><Input value={data.siteName} onChange={v => patch('siteName', v)} placeholder="現場名・工事内容" /></Field><Field label="年" required><Input type="number" value={data.year} onChange={v => patch('year', v)} placeholder="西暦" /></Field><Field label="月" required><Input type="number" value={data.month} onChange={v => patch('month', v)} placeholder="月" /></Field><Field label="日" required><Input type="number" value={data.day} onChange={v => patch('day', v)} placeholder="日" /></Field></div></Section><Section title="作業日の作業内容" note="AM / PMそれぞれ3行"><div className="form-grid two"><Field label="AM"><Input value={data.amTime} onChange={v => patch('amTime', v)} placeholder="作業時間" /></Field><Field label="PM"><Input value={data.pmTime} onChange={v => patch('pmTime', v)} placeholder="作業時間" /></Field></div><div className="repeat-fields">{data.workSlots.map((value, index) => <Field key={index} label={`${index < 3 ? 'AM' : 'PM'} ${index % 3 + 1}`}><Input value={value} onChange={v => arrayPatch('workSlots', index, v)} placeholder="作業内容" /></Field>)}</div></Section><Section title="作業員名" note={data.firstWorkerLocked ? '1行目は保存済みの本人として固定されています' : '保存すると1行目が本人として固定されます'}><div className="repeat-fields">{data.workers.map((value, index) => <Field key={index} label={`氏名 ${index + 1}`}><Input value={value} disabled={index === 0 && data.firstWorkerLocked} onChange={v => arrayPatch('workers', index, v)} placeholder={index === 0 ? '本人の名前' : '作業員名'} /></Field>)}</div></Section><Section title="連絡事項・注意事項・明日の作業予定" note="改行はPDFでも保持されます"><Field label="連絡事項・注意事項・明日の作業予定"><Area value={data.notes} onChange={v => patch('notes', v)} rows={5} placeholder="必要事項を入力" /></Field></Section></FormShell>
+}
+
+function TagEditorPage({ tags, updateTag, resetTags, copyTag, back }) {
+  return <div className="page-wrap"><div className="form-top"><button className="back-link" onClick={back}><ArrowLeft size={17} />設定へ戻る</button><span className="form-step">タグ管理</span></div><Header eyebrow="帳票テンプレート" title="タグ調整" text="Googleスライドのタグを貼り替え、端末に保存できます。" /><div className="info-callout"><Tags size={18} /><div><strong>既存タグを優先して引き継ぎます</strong><span>現行アプリ由来の項目はキーを保持し、新規項目はPDFの項目名に対応したタグを用意しています。</span></div></div><div className="config-preview tag-editor-panel"><div className="section-heading"><div><h2>タグ台帳</h2><span>変更は入力ごとにこの端末へ保存されます</span></div><button className="button secondary tag-reset" onClick={resetTags}>初期設定に戻す</button></div><div className="tag-list">{tags.map(item => <div className="tag-row" key={item.sourceKey}><div><strong>{item.formName}</strong><span>{item.sourceKey} ・ {item.origin}</span></div><input className="tag-edit-input" aria-label={`${item.formName}のタグ`} value={item.tag} onChange={event => updateTag(item.sourceKey, event.target.value)} /><button className="icon-button tag-copy" title="タグをコピー" aria-label={`${item.tag}をコピー`} onClick={() => copyTag(item.tag)}><Copy size={16} /></button></div>)}</div><p className="tag-help">Googleスライド側のタグを確認したら、該当欄へ貼り付けて保存してください。</p></div></div>
 }
 
 function SettingsPage({ records, profile, setProfile, exportBackup, importBackup, clearLocalData, copyTag }) {

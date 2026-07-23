@@ -5,7 +5,7 @@ import {
   Plus, Printer, ReceiptText, Save, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Tags, Trash2, Upload, WandSparkles,
 } from 'lucide-react'
-import { tagRegistry, templateConfig } from './config/template-config'
+import { tagPlacementDefaults, tagRegistry, templateConfig } from './config/template-config'
 import ReceiptEditor from './features/ReceiptEditor'
 import ReportPreview from './features/ReportPreview'
 import './styles-operations.css'
@@ -14,6 +14,7 @@ const storageKey = 'oshigoto-app-records-v2'
 const legacyStorageKey = 'oshigoto-prototype-records'
 const profileKey = 'oshigoto-app-profile'
 const tagStorageKey = 'oshigoto-app-tag-registry-v1'
+const placementStorageKey = 'oshigoto-app-tag-placements-v1'
 
 const completionSeed = {
   type: 'completion', status: 'draft', siteName: '', orderNo: '', workDate: '', address: '',
@@ -40,6 +41,18 @@ function loadTagRegistry() {
     return tagRegistry.map(item => ({ ...item, tag: savedBySourceKey[item.sourceKey]?.tag || item.tag }))
   } catch {
     return clone(tagRegistry)
+  }
+}
+
+function loadTagPlacements() {
+  try {
+    const raw = localStorage.getItem(placementStorageKey)
+    const saved = raw ? JSON.parse(raw) : null
+    if (!Array.isArray(saved)) return clone(tagPlacementDefaults)
+    const savedByKey = Object.fromEntries(saved.map(item => [`${item.template}:${item.sourceKey}`, item]))
+    return tagPlacementDefaults.map(item => savedByKey[`${item.template}:${item.sourceKey}`] ? { ...item, ...savedByKey[`${item.template}:${item.sourceKey}`] } : item)
+  } catch {
+    return clone(tagPlacementDefaults)
   }
 }
 
@@ -112,7 +125,7 @@ function validateRecord(record) {
 }
 
 function App() {
-  const [page, setPage] = useState(() => new URLSearchParams(window.location.search).get('open') === 'tags' ? 'tag-settings' : 'home')
+  const [page, setPage] = useState(() => { const open = new URLSearchParams(window.location.search).get('open'); return open === 'tags' ? 'tag-settings' : open === 'placements' ? 'tag-placement' : 'home' })
   const [records, setRecords] = useState(loadRecords)
   const [activeId, setActiveId] = useState(null)
   const [notice, setNotice] = useState('')
@@ -120,6 +133,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [profile, setProfile] = useState(() => localStorage.getItem(profileKey) || '富田')
   const [tags, setTags] = useState(loadTagRegistry)
+  const [placements, setPlacements] = useState(loadTagPlacements)
 
   useEffect(() => {
     if (!notice) return undefined
@@ -245,6 +259,14 @@ function App() {
     })
   }
 
+  const updateTagField = (sourceKey, field, value) => {
+    setTags(current => {
+      const next = current.map(item => item.sourceKey === sourceKey ? { ...item, [field]: value } : item)
+      localStorage.setItem(tagStorageKey, JSON.stringify(next))
+      return next
+    })
+  }
+
   const resetTags = () => {
     const next = clone(tagRegistry)
     setTags(next)
@@ -261,6 +283,21 @@ function App() {
     }
   }
 
+  const updatePlacement = (template, sourceKey, field, value) => {
+    setPlacements(current => {
+      const next = current.map(item => item.template === template && item.sourceKey === sourceKey ? { ...item, [field]: Number(value) } : item)
+      localStorage.setItem(placementStorageKey, JSON.stringify(next))
+      return next
+    })
+  }
+
+  const resetPlacements = () => {
+    const next = clone(tagPlacementDefaults)
+    setPlacements(next)
+    localStorage.setItem(placementStorageKey, JSON.stringify(next))
+    setNotice('タグ配置を初期設定に戻しました')
+  }
+
   return <div className="app-shell">
     <aside className={`sidebar ${menuOpen ? 'is-open' : ''}`}>
       <div className="brand-lockup"><div className="brand-mark"><Sparkles size={18} /></div><div><strong>オシゴト</strong><span>帳票ワークスペース</span></div></div>
@@ -271,7 +308,8 @@ function App() {
         <NavButton active={page === 'jobs'} onClick={() => setPage('jobs')} icon={<Cloud size={18} />}>PDF処理</NavButton>
         <hr />
         <NavButton active={page === 'settings'} onClick={() => setPage('settings')} icon={<Settings2 size={18} />}>設定</NavButton>
-        <NavButton active={page === 'tag-settings'} onClick={() => setPage('tag-settings')} icon={<Tags size={18} />}>タグ調整</NavButton>
+        <NavButton active={page === 'tag-settings'} onClick={() => setPage('tag-settings')} icon={<Tags size={18} />}>項目・タグ名</NavButton>
+        <NavButton active={page === 'tag-placement'} onClick={() => setPage('tag-placement')} icon={<Tags size={18} />}>タグ配置</NavButton>
       </nav>
       <div className="sidebar-footer"><div className="avatar">{profile.slice(0, 1) || 'K'}</div><div><strong>{profile || '未設定'}</strong><span>管理者・試作ユーザー</span></div><ChevronDown size={16} /></div>
     </aside>
@@ -282,7 +320,8 @@ function App() {
       {page === 'drafts' && <Drafts records={records} open={openForm} />}
       {page === 'jobs' && <Jobs records={records} back={() => setPage('home')} open={openJob} retry={retryJob} />}
         {page === 'settings' && <SettingsPage records={records} profile={profile} setProfile={updateProfile} exportBackup={exportBackup} importBackup={importBackup} clearLocalData={clearLocalData} copyTag={copyTag} />}
-       {page === 'tag-settings' && <TagEditorPage tags={tags} updateTag={updateTag} resetTags={resetTags} copyTag={copyTag} back={() => setPage('settings')} />}
+       {page === 'tag-settings' && <TagEditorPage tags={tags} updateTag={updateTag} updateTagField={updateTagField} resetTags={resetTags} copyTag={copyTag} back={() => setPage('settings')} />}
+       {page === 'tag-placement' && <TagPlacementPage tags={tags} placements={placements} updatePlacement={updatePlacement} resetPlacements={resetPlacements} back={() => setPage('settings')} />}
       {page === 'completion-form' && activeForm && <CompletionForm data={activeForm} update={updateRecord} back={() => setPage('home')} save={save} complete={complete} receipt={() => setPage('receipt')} errors={errors} />}
       {page === 'marusan-form' && activeForm && <MarusanForm data={activeForm} update={updateRecord} back={() => setPage('home')} save={save} complete={complete} errors={errors} />}
       {page === 'receipt' && activeForm && <ReceiptEditor data={activeForm} update={updateRecord} back={() => setPage(`${activeForm.type}-form`)} done={() => { setPage(`${activeForm.type}-form`); setNotice('領収書を保存しました') }} />}
@@ -347,8 +386,16 @@ function MarusanForm({ data, update, back, save, complete, errors }) {
   return <FormShell eyebrow="丸産報告書" title="丸産報告書を作成" text="作業日、時間帯、作業内容、作業者を入力してください。" back={back} save={save} complete={complete} step="01 / 02 作業日報" errors={errors}><Section title="作業情報" note="会社名は固定です"><div className="fixed-company"><ShieldCheck size={17} /><span>株式会社ＴＲＣ</span><small>固定</small></div><div className="form-grid two"><Field label="工事担当名"><Input value={data.personInCharge} onChange={v => patch('personInCharge', v)} placeholder="担当者名" /></Field><Field label="現場名及び工事内容" required><Input value={data.siteName} onChange={v => patch('siteName', v)} placeholder="現場名・工事内容" /></Field><Field label="年" required><Input type="number" value={data.year} onChange={v => patch('year', v)} placeholder="西暦" /></Field><Field label="月" required><Input type="number" value={data.month} onChange={v => patch('month', v)} placeholder="月" /></Field><Field label="日" required><Input type="number" value={data.day} onChange={v => patch('day', v)} placeholder="日" /></Field></div></Section><Section title="作業日の作業内容" note="AM / PMそれぞれ3行"><div className="form-grid two"><Field label="AM"><Input value={data.amTime} onChange={v => patch('amTime', v)} placeholder="作業時間" /></Field><Field label="PM"><Input value={data.pmTime} onChange={v => patch('pmTime', v)} placeholder="作業時間" /></Field></div><div className="repeat-fields">{data.workSlots.map((value, index) => <Field key={index} label={`${index < 3 ? 'AM' : 'PM'} ${index % 3 + 1}`}><Input value={value} onChange={v => arrayPatch('workSlots', index, v)} placeholder="作業内容" /></Field>)}</div></Section><Section title="作業員名" note={data.firstWorkerLocked ? '1行目は保存済みの本人として固定されています' : '保存すると1行目が本人として固定されます'}><div className="repeat-fields">{data.workers.map((value, index) => <Field key={index} label={`氏名 ${index + 1}`}><Input value={value} disabled={index === 0 && data.firstWorkerLocked} onChange={v => arrayPatch('workers', index, v)} placeholder={index === 0 ? '本人の名前' : '作業員名'} /></Field>)}</div></Section><Section title="連絡事項・注意事項・明日の作業予定" note="改行はPDFでも保持されます"><Field label="連絡事項・注意事項・明日の作業予定"><Area value={data.notes} onChange={v => patch('notes', v)} rows={5} placeholder="必要事項を入力" /></Field></Section></FormShell>
 }
 
-function TagEditorPage({ tags, updateTag, resetTags, copyTag, back }) {
-  return <div className="page-wrap"><div className="form-top"><button className="back-link" onClick={back}><ArrowLeft size={17} />設定へ戻る</button><span className="form-step">タグ管理</span></div><Header eyebrow="帳票テンプレート" title="タグ調整" text="Googleスライドのタグを貼り替え、端末に保存できます。" /><div className="info-callout"><Tags size={18} /><div><strong>既存タグを優先して引き継ぎます</strong><span>現行アプリ由来の項目はキーを保持し、新規項目はPDFの項目名に対応したタグを用意しています。</span></div></div><div className="config-preview tag-editor-panel"><div className="section-heading"><div><h2>タグ台帳</h2><span>変更は入力ごとにこの端末へ保存されます</span></div><button className="button secondary tag-reset" onClick={resetTags}>初期設定に戻す</button></div><div className="tag-list">{tags.map(item => <div className="tag-row" key={item.sourceKey}><div><strong>{item.formName}</strong><span>{item.sourceKey} ・ {item.origin}</span></div><input className="tag-edit-input" aria-label={`${item.formName}のタグ`} value={item.tag} onChange={event => updateTag(item.sourceKey, event.target.value)} /><button className="icon-button tag-copy" title="タグをコピー" aria-label={`${item.tag}をコピー`} onClick={() => copyTag(item.tag)}><Copy size={16} /></button></div>)}</div><p className="tag-help">Googleスライド側のタグを確認したら、該当欄へ貼り付けて保存してください。</p></div></div>
+function TagEditorPage({ tags, updateTag, updateTagField, resetTags, copyTag, back }) {
+  return <div className="page-wrap"><div className="form-top"><button className="back-link" onClick={back}><ArrowLeft size={17} />設定へ戻る</button><span className="form-step">項目名・タグ名</span></div><Header eyebrow="帳票テンプレート" title="項目名・タグ名" text="項目タイトルとタグ文字列を別々に調整できます。" /><div className="info-callout"><Tags size={18} /><div><strong>現行項目名を優先して引き継ぎます</strong><span>新規項目は台紙のタイトルを初期値にしています。Googleスライドの実タグ確認後に上書きできます。</span></div></div><div className="config-preview tag-editor-panel"><div className="section-heading"><div><h2>項目名・タグ台帳</h2><span>変更は入力ごとにこの端末へ保存されます</span></div><button className="button secondary tag-reset" onClick={resetTags}>初期設定に戻す</button></div><div className="tag-list">{tags.map(item => <div className="tag-row tag-row-title" key={item.sourceKey}><div><span>{item.origin} ・ {item.sourceKey}</span></div><input className="tag-title-input" aria-label={`${item.sourceKey}の項目タイトル`} value={item.formName} onChange={event => updateTagField(item.sourceKey, 'formName', event.target.value)} /><input className="tag-edit-input" aria-label={`${item.sourceKey}のタグ文字列`} value={item.tag} onChange={event => updateTagField(item.sourceKey, 'tag', event.target.value)} /><button className="icon-button tag-copy" title="タグをコピー" aria-label={`${item.tag}をコピー`} onClick={() => copyTag(item.tag)}><Copy size={16} /></button></div>)}</div><p className="tag-help">項目タイトルは画面表示・台紙見出しとの対応に使います。タグ文字列はGoogleスライドへ貼り付けます。</p></div></div>
+}
+
+function TagPlacementPage({ tags, placements, updatePlacement, resetPlacements, back }) {
+  const [template, setTemplate] = useState('completion')
+  const visible = placements.filter(item => item.template === template)
+  const tagByKey = Object.fromEntries(tags.map(item => [item.sourceKey, item]))
+  const background = template === 'completion' ? './templates/completion-report.png' : './templates/marusan-report.png'
+  return <div className="page-wrap tag-placement-page"><div className="form-top"><button className="back-link" onClick={back}><ArrowLeft size={17} />設定へ戻る</button><span className="form-step">台紙タグ配置</span></div><Header eyebrow="帳票テンプレート" title="タグ配置" text="正式台紙にタグを初期配置しました。位置は数値で調整できます。" /><div className="segmented template-switch"><button type="button" className={template === 'completion' ? 'selected' : ''} onClick={() => setTemplate('completion')}>工事完了報告書</button><button type="button" className={template === 'marusan' ? 'selected' : ''} onClick={() => setTemplate('marusan')}>丸産報告書</button></div><div className="placement-layout"><div className="placement-preview"><div className="placement-sheet"><img src={background} alt="正式台紙" />{visible.map(item => { const tag = tagByKey[item.sourceKey] || { tag: `<<${item.sourceKey}>>`, formName: item.sourceKey }; return <span key={item.sourceKey} className="placement-tag" style={{ left: `${item.x}%`, top: `${item.y}%`, width: `${item.width}%`, height: `${item.height}%`, fontSize: `${Math.max(7, Math.min(14, item.fontSize || 11))}px` }}>{tag.tag}</span> })}</div></div><div className="placement-controls"><div className="section-heading"><h2>配置一覧</h2><button className="button secondary" onClick={resetPlacements}>初期配置に戻す</button></div>{visible.map(item => { const tag = tagByKey[item.sourceKey] || { formName: item.sourceKey, tag: item.sourceKey }; return <div className="placement-row" key={item.sourceKey}><div><strong>{tag.formName}</strong><code>{tag.tag}</code></div><div className="placement-inputs"><label>X<input type="number" step="0.1" value={item.x} onChange={event => updatePlacement(template, item.sourceKey, 'x', event.target.value)} /></label><label>Y<input type="number" step="0.1" value={item.y} onChange={event => updatePlacement(template, item.sourceKey, 'y', event.target.value)} /></label><label>幅<input type="number" step="0.1" value={item.width} onChange={event => updatePlacement(template, item.sourceKey, 'width', event.target.value)} /></label><label>高さ<input type="number" step="0.1" value={item.height} onChange={event => updatePlacement(template, item.sourceKey, 'height', event.target.value)} /></label></div></div> })}</div></div></div>
 }
 
 function SettingsPage({ records, profile, setProfile, exportBackup, importBackup, clearLocalData, copyTag }) {

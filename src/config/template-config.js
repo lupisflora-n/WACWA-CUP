@@ -36,8 +36,9 @@ export const templateConfig = {
   },
 }
 
-const existing = (formName, sourceKey, tag, field = sourceKey) => ({ formName, sourceKey, tag, field, origin: '現行アプリ', status: '引き継ぎ' })
-const newField = (formName, sourceKey, tag, field = sourceKey) => ({ formName, sourceKey, tag, field, origin: '新PDF', status: '新規' })
+const inferTemplate = sourceKey => sourceKey.startsWith('ms_') || ['year', 'month', 'day', 'amTime', 'pmTime', 'notes', 'submittedAt'].includes(sourceKey) || sourceKey.startsWith('workSlot') ? 'marusan' : 'completion'
+const existing = (formName, sourceKey, tag, field = sourceKey) => ({ formName, sourceKey, tag, field, template: inferTemplate(sourceKey), origin: '現行アプリ', status: '引き継ぎ' })
+const newField = (formName, sourceKey, tag, field = sourceKey) => ({ formName, sourceKey, tag, field, template: inferTemplate(sourceKey), origin: '新PDF', status: '新規' })
 
 // Tags are copyable now; their exact spelling will be confirmed against the original Slides before migration.
 export const tagRegistry = [
@@ -47,12 +48,15 @@ export const tagRegistry = [
   existing('作業者', 'workerName', '<<workerName>>'),
   existing('現場名', 'siteName', '<<siteName>>'),
   existing('注文No', 'orderNo', '<<orderNo>>'),
+  existing('住所', 'address', '<<address>>'),
+  existing('日付', 'workDate', '<<workDate>>'),
   existing('工事内容 1', 'work2', '<<work2>>', 'workContent'),
   existing('工事内容 2', 'work3', '<<work3>>', 'workContent'),
   existing('工事内容 3', 'work4', '<<work4>>', 'workContent'),
   existing('合計', 'constructionTotal', '<<constructionTotal>>', 'total'),
   existing('消費税', 'tax', '<<tax>>'),
   existing('工事担当名', 'ms_personInCharge', '<<ms_personInCharge>>'),
+  existing('現場名及び工事内容', 'ms_site', '<<ms_site>>', 'siteName'),
   existing('作業員名 1', 'ms_nameL1', '<<ms_nameL1>>'),
   existing('作業員名 2', 'ms_nameL2', '<<ms_nameL2>>'),
   existing('作業員名 3', 'ms_nameL3', '<<ms_nameL3>>'),
@@ -79,3 +83,22 @@ export const tagRegistry = [
   newField('作業日の作業内容 PM 3', 'workSlot6', '<<workSlot6>>'),
   newField('連絡事項・注意事項・明日の作業予定', 'notes', '<<notes>>'),
 ]
+
+// Initial positions are percentages of each A4 background. They are deliberately editable.
+export const tagPlacementDefaults = [
+  ['completion', 'toCompany', 4, 16, 39, 4], ['completion', 'toOffice', 4, 22, 39, 4], ['completion', 'toPerson', 4, 27, 39, 4],
+  ['completion', 'workerName', 57, 7.3, 35, 3.5], ['completion', 'workDate', 5, 33.5, 25, 3.5], ['completion', 'siteName', 31, 33.5, 60, 3.5],
+  ['completion', 'orderNo', 5, 37.1, 28, 3.5], ['completion', 'address', 37, 37.1, 54, 3.5], ['completion', 'work2', 5, 40.3, 41, 3.7],
+  ['completion', 'work3', 5, 44, 41, 3.7], ['completion', 'work4', 5, 47.7, 41, 3.7], ['completion', 'quantity', 46, 40.3, 5, 12.1],
+  ['completion', 'remarks', 53, 40.3, 40, 12.1], ['completion', 'spray', 5, 53.8, 41, 3.2], ['completion', 'sprayDetail', 5, 57, 41, 13],
+  ['completion', 'specialMaterial', 53, 57, 40, 13], ['completion', 'constructionTotal', 5, 89.7, 25, 4], ['completion', 'tax', 35, 89.7, 25, 4],
+  ['completion', 'totalAmount', 66, 89.7, 28, 4],
+  ['marusan', 'ms_personInCharge', 7, 3, 30, 3.5], ['marusan', 'submittedAt', 61, 3, 32, 3.5], ['marusan', 'year', 42, 15, 14, 4],
+  ['marusan', 'month', 61, 15, 14, 4], ['marusan', 'day', 80, 15, 14, 4], ['marusan', 'ms_site', 28, 21, 65, 7],
+  ['marusan', 'amTime', 28, 30, 31, 3.5], ['marusan', 'pmTime', 61, 30, 31, 3.5],
+  ['marusan', 'workSlot1', 28, 33.8, 31, 3.7], ['marusan', 'workSlot2', 28, 37.5, 31, 3.7], ['marusan', 'workSlot3', 28, 41.2, 31, 3.7],
+  ['marusan', 'workSlot4', 61, 33.8, 31, 3.7], ['marusan', 'workSlot5', 61, 37.5, 31, 3.7], ['marusan', 'workSlot6', 61, 41.2, 31, 3.7],
+  ['marusan', 'ms_nameL1', 28, 46.7, 31, 3.8], ['marusan', 'ms_nameL2', 28, 50.5, 31, 3.8], ['marusan', 'ms_nameL3', 28, 54.3, 31, 3.8],
+  ['marusan', 'ms_nameR1', 61, 46.7, 31, 3.8], ['marusan', 'ms_nameR2', 61, 50.5, 31, 3.8], ['marusan', 'ms_nameR3', 61, 54.3, 31, 3.8],
+  ['marusan', 'notes', 28, 60, 65, 24],
+].map(([template, sourceKey, x, y, width, height]) => ({ template, sourceKey, x, y, width, height, fontSize: 11 }))

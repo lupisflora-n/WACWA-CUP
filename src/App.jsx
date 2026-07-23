@@ -38,7 +38,15 @@ function loadTagRegistry() {
     const saved = raw ? JSON.parse(raw) : null
     if (!Array.isArray(saved)) return clone(tagRegistry)
     const savedBySourceKey = Object.fromEntries(saved.map(item => [item.sourceKey, item]))
-    return tagRegistry.map(item => ({ ...item, tag: savedBySourceKey[item.sourceKey]?.tag || item.tag }))
+    return tagRegistry.map(item => {
+      const savedItem = savedBySourceKey[item.sourceKey]
+      if (!savedItem) return item
+      return {
+        ...item,
+        formName: savedItem.formName ?? item.formName,
+        tag: savedItem.tag ?? item.tag,
+      }
+    })
   } catch {
     return clone(tagRegistry)
   }

@@ -112,7 +112,7 @@ function validateRecord(record) {
 }
 
 function App() {
-  const [page, setPage] = useState('home')
+  const [page, setPage] = useState(() => new URLSearchParams(window.location.search).get('open') === 'tags' ? 'tag-settings' : 'home')
   const [records, setRecords] = useState(loadRecords)
   const [activeId, setActiveId] = useState(null)
   const [notice, setNotice] = useState('')

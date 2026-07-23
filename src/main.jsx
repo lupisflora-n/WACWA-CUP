@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import {
   Archive, ArrowLeft, ArrowRight, Check, ChevronDown, ClipboardList, Cloud,
   FileCheck2, FileText, ImagePlus, LayoutDashboard, Menu, MoreHorizontal,
-  Plus, ReceiptText, RotateCw, Save, Settings2, ShieldCheck, SlidersHorizontal,
+  Plus, Printer, ReceiptText, RotateCw, Save, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, WandSparkles,
 } from 'lucide-react'
 import { templateConfig } from './config/template-config'
@@ -43,7 +43,7 @@ function App() {
 }
 
 function NavButton({ active, onClick, icon, children }) { return <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>{icon}{children}</button> }
-function Header({ eyebrow, title, text, action }) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{text}</p></div>{action}</div> }
+function Header({ eyebrow, title, text, action }) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{text}</p></div><div className="page-header-actions">{action}<button className="button secondary print-button" onClick={() => window.print()} title="印刷またはPDF保存"><Printer size={16} />印刷/PDF</button></div></div> }
 
 function Home({ create, go, draftCount, processingCount }) { return <div className="page-wrap"><Header eyebrow="今日の仕事" title="おつかれさまです、富田さん" text="現場の記録から帳票作成まで、ここから進められます。" action={<button className="button primary" onClick={() => create('completion')}><Plus size={17} />新しい報告書</button>} /><section className="hero-band"><div><div className="hero-kicker"><Sparkles size={15} />仕事の流れをひとつに</div><h2>入力した内容を、<br />そのまま帳票へ。</h2><p>下書き保存と処理状況が見えるので、現場から事務所まで迷いません。</p></div><div className="hero-orbit"><FileCheck2 size={54} /><span>PDF</span></div></section><div className="section-heading"><h2>すぐに作成</h2><span>よく使う帳票を選択してください</span></div><div className="create-grid"><CreateCard tone="teal" icon={<FileText size={23} />} title="工事完了報告書" text="現場・工事内容・金額・領収書" onClick={() => create('completion')} /><CreateCard tone="orange" icon={<ClipboardList size={23} />} title="丸産報告書" text="作業日・AM/PM・作業者" onClick={() => create('marusan')} /></div><div className="dashboard-grid"><Stat icon={<Archive size={17} />} title="下書き" value={String(draftCount)} unit="件" text="続きを入力する" onClick={() => go('drafts')} /><Stat icon={<Cloud size={17} />} title="PDF処理" value={String(processingCount)} unit="件" text="作成状況を確認する" onClick={() => go('jobs')} /><Stat quiet icon={<ShieldCheck size={17} />} title="保存状態" value="安定" text="この端末に保存" /></div></div> }
 function CreateCard({ tone, icon, title, text, onClick }) { return <button className={`create-card ${tone}`} onClick={onClick}><div className="card-icon">{icon}</div><div><strong>{title}</strong><span>{text}</span></div><ArrowRight size={19} /></button> }

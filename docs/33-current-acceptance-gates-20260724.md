@@ -19,8 +19,16 @@
 
 1. 最新のApps Scriptを固定Webアプリへ再デプロイする操作が未完了。現在のローカルコードを保存済みだが、公開版への反映は未確認。
 2. `GOOGLE_CLIENT_ID`、`ALLOWED_EMAILS`、`ADMIN_EMAILS`、必要なら`VIEWER_EMAILS`が未登録。したがって認証付き共有保存は未運用開始。
-3. GitHub Pagesへ最新ローカル変更を公開していない。固定URLは確認済みだが、最新変更をスマホから受入確認できる状態ではない。
+3. GitHub PagesへMVPを公開済み。固定URLでスマホ幅の受入確認を実施済みだが、実機固有のカメラ・印刷ダイアログは利用者端末での最終確認が必要。
 4. 現行AppSheetの権限・通知・共有仕様は、AppSheet管理画面での最終比較が必要。確認できない挙動は実装済みとみなさない。
+
+## 2026-07-25 MVP公開確認
+
+- 固定URL: https://lupisflora-n.github.io/WACWA-CUP/
+- 公開コミット: `18771ba`
+- 工事完了報告書・丸産報告書の台紙プレビューをスマホ幅390px相当で確認した。
+- `document.documentElement.scrollWidth` と表示幅が一致し、帳票プレビューの横スクロールを解消した。
+- `npm run build` とGitHub Pages公開を確認した。
 
 ## 本番化の順序
 

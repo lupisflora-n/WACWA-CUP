@@ -25,6 +25,23 @@ AppSheetで作成された既存の業務アプリをもとに、工事完了報
 - AppSheet管理画面: 追加の権限確認が必要
 - 実装方式: 未確定。現時点の第一候補はPWA寄りのWebアプリ
 
+## MVPスマホプレビュー
+
+固定URL:
+
+<https://lupisflora-n.github.io/WACWA-CUP/>
+
+スマホではこのURLをブックマーク、またはホーム画面に追加して確認する。Wi-Fi接続や毎回変わる開発用リンクは不要で、携帯回線からも同じURLを開ける。`main`への公開後はGitHub ActionsがビルドとGitHub Pagesへの反映を行う。
+
+確認用の入口:
+
+- 工事完了報告書の台紙確認: <https://lupisflora-n.github.io/WACWA-CUP/?fixture=completion-reference>
+- 丸産報告書の台紙確認: <https://lupisflora-n.github.io/WACWA-CUP/?fixture=marusan-reference>
+- 項目・タグ名の編集画面: <https://lupisflora-n.github.io/WACWA-CUP/?open=tags>
+- タグ配置の編集画面: <https://lupisflora-n.github.io/WACWA-CUP/?open=placements>
+
+現在の公開版はサンプル環境で、帳票データは原則として端末内に保存する。Google Drive / Sheetsへの共有保存と本番運用権限は別途受入確認が必要である。
+
 ## 開発ルール
 
 - 不明点を曖昧なまま実装しない。

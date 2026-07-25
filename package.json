@@ -5,8 +5,10 @@
   "description": "Oshigoto app prototype",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0 --port 5173 --strictPort",
+    "dev:phone": "vite --host 0.0.0.0 --port 5173 --strictPort",
     "build": "vite build",
+    "postbuild": "node scripts/copy-spa-fallback.mjs",
     "preview": "vite preview",
     "status": "git status --short --branch"
   },

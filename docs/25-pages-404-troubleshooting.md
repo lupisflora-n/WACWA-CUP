@@ -2,9 +2,13 @@
 
 ## Current Finding
 
-The repository contains a valid Pages workflow and the main branch has been pushed successfully. The public URL currently returns HTTP 404, which means the repository-side Pages publication is not active yet.
+The repository contains a valid Pages workflow. The stable public URL is now responding with HTTP 200:
 
-## Required One-Time Setting
+`https://lupisflora-n.github.io/WACWA-CUP/`
+
+This URL is independent of the phone's Wi-Fi or tethering network and should be saved to the phone home screen.
+
+## If the URL ever returns 404
 
 Open repository `Settings > Pages`, set `Build and deployment > Source` to `GitHub Actions`, and save. Then rerun the latest `Deploy preview` workflow if GitHub has not started it automatically.
 
